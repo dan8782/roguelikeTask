@@ -1,4 +1,3 @@
-"use strict";
 function fillWall() {
     for (var i = 0; i < 24; i++) {
         var row = [];
@@ -79,8 +78,6 @@ function placeEnemies() {
 
 function spawnCharacter() {
     do {
-        var characterX = 0;
-        var characterY = 0;
         characterX = Math.floor(Math.random() * 40);
         characterY = Math.floor(Math.random() * 24);
     } while (map[characterY][characterX] !== 0);
