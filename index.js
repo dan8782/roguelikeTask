@@ -1,42 +1,4 @@
-function drawMap() {
-    moveEnemies();
-    var field = document.querySelector('.field');
-    field.innerHTML = ''; // Очистка поля
-    for (var i = 0; i < map.length; i++) {
-        for (var j = 0; j < map[i].length; j++) {
-            var tile = document.createElement('div');
-            tile.classList.add('tile');
-            if (map[i][j] == 1) {
-                tile.classList.add('tileW'); // Стена
-            } else if (map[i][j] == 2) {
-                tile.classList.add('tileSW'); // Меч
-            } else if (map[i][j] == 3) {
-                tile.classList.add('tileHP'); // Зелье здоровья
-            } else if (map[i][j] == 4) { 
-                tile.classList.add('tileP');
-                var healthElement = document.createElement('div');
-                healthElement.classList.add('health');
-                var healthWidth = 100;
-                healthElement.style.width = healthWidth + '%';
-                tile.appendChild(healthElement);
-            } else if (map[i][j] === enemy) { 
-                tile.classList.add('tileE');
-                var healthElement = document.createElement('div');
-                healthElement.classList.add('health');
-                var healthWidth = (enemy.hp / 10) * 100; // Подразумевая, что максимальное HP - 10
-                healthElement.style.width = healthWidth + '%';
-                tile.appendChild(healthElement);
-            } else {
-                tile.classList.add('tile-.'); //
-            }
-            tile.style.left = j * 25.6 + 'px';
-            tile.style.top = i * 26.67 + 'px';
-            field.appendChild(tile);
-        }
-    }
-    console.log(map)
-}
-
+"use strict";
 function fillWall() {
     for (var i = 0; i < 24; i++) {
         var row = [];
@@ -45,8 +7,6 @@ function fillWall() {
         }
         map.push(row);
     }
-    genRooms();
-    genPassages();
 }
 
 function genRooms() {
@@ -58,7 +18,7 @@ function genRooms() {
         var roomY = Math.floor(Math.random() * (24 - roomHeight)); // vertical
         for (var i = roomY; i < roomY + roomHeight; i++) {
             for (var j = roomX; j < roomX + roomWidth; j++) {
-                map[i][j] = 0; // Устанавливаем клетки комнаты как пол (0)
+                map[i][j] = 0; 
             }
         }
     }
@@ -71,12 +31,12 @@ function genPassages() {
         if (direction === 0) {
             var passageY = Math.floor(Math.random() * 22) + 1; // Случайная позиция по вертикали
             for (var x = 0; x < 40; x++) {
-                map[passageY][x] = 0; // Устанавливаем клетки вертикального прохода как пол (0)
+                map[passageY][x] = 0; 
             }
         } else {
             var passageX = Math.floor(Math.random() * 38) + 1; // Случайная позиция по горизонтали
             for (var y = 0; y < 24; y++) {
-                map[y][passageX] = 0; // Устанавливаем клетки горизонтального прохода как пол (0)
+                map[y][passageX] = 0; 
             }
         }
     }
@@ -89,7 +49,7 @@ function placeItems() {
             x = Math.floor(Math.random() * 40);
             y = Math.floor(Math.random() * 24);
         } while (map[y][x] !== 0);
-        map[y][x] = 2; // Устанавливаем меч
+        map[y][x] = 2; // меч
     }
     for (var i = 0; i < healthPotions; i++) {
         var x, y;
@@ -97,20 +57,199 @@ function placeItems() {
             x = Math.floor(Math.random() * 40);
             y = Math.floor(Math.random() * 24);
         } while (map[y][x] !== 0);
-        map[y][x] = 3; // Устанавливаем зелье здоровья
+        map[y][x] = 3; // пузырь
+    }
+}
+
+function placeEnemies() {
+    for (var i = 0; i < 10; i++) { // Create 10 unique enemies
+        var x, y;
+        do {
+            x = Math.floor(Math.random() * 40);
+            y = Math.floor(Math.random() * 24);
+        } while (map[y][x] !== 0 && map[y][x]!==2 && map[y][x]!==3 && map[y][x]!==4); 
+        var uniqueEnemy = {
+            id: i + 1, // unique ID
+            type: 5,
+            hp: 10,
+        };
+        map[y][x] = uniqueEnemy;
     }
 }
 
 function spawnCharacter() {
     do {
+        var characterX = 0;
+        var characterY = 0;
         characterX = Math.floor(Math.random() * 40);
         characterY = Math.floor(Math.random() * 24);
     } while (map[characterY][characterX] !== 0);
-    map[characterY][characterX] = 4; // Устанавливаем персонажа
+    map[characterY][characterX] = character;
+}
+
+function drawMap() {
+    var field = document.querySelector('.field');
+    field.innerHTML = ''; // Очистка поля
+    for (var i = 0; i < map.length; i++) {
+        for (var j = 0; j < map[i].length; j++) {
+            var tile = document.createElement('div');
+            tile.classList.add('tile');
+            if (map[i][j] == 1) {
+                tile.classList.add('tileW'); // Стена
+            } else if (map[i][j] == 2) {
+                tile.classList.add('tileSW'); // Меч
+            } else if (map[i][j] == 3) {
+                tile.classList.add('tileHP'); // Зелье здоровья
+            } else if (map[i][j].attack) { 
+                createTileWithHealth(tile, map[i][j].health, 0);
+            } else if (map[i][j].id) { 
+                createTileWithHealth(tile, map[i][j].hp, 1);
+            } else {
+                tile.classList.add('tile-.'); //
+            }
+            tile.style.left = j * 25.6 + 'px';
+            tile.style.top = i * 26.67 + 'px';
+            field.appendChild(tile);
+        }
+    }
+    console.log(map)
+}
+
+function createTileWithHealth(tile, healthValue,type) {
+    if (type) {
+        tile.classList.add('tileE'); // или 'tileE' 
+    }else{
+        tile.classList.add('tileP'); // или 'tileE'  
+    };
+    var healthElement = document.createElement('div');
+    healthElement.classList.add('health');
+    var healthWidth = (healthValue / 10) * 100;
+    healthElement.style.width = healthWidth + '%';
+    tile.appendChild(healthElement);
+}
+
+function characterAttack() {
+    var positions = [
+        { dx: 0, dy: -1 }, 
+        { dx: -1, dy: 0 }, 
+        { dx: 1, dy: 0 },  
+        { dx: 1, dy: 1 }, 
+        { dx: 0, dy: 1 }, 
+        { dx: 0, dy: 0 }
+    ];
+
+    for (var i = 0; i < positions.length; i++) {
+        var xOffset = characterX + positions[i].dx;
+        var yOffset = characterY + positions[i].dy;
+        if (xOffset >= 0 && xOffset < 40 && yOffset >= 0 && yOffset < 24) {
+            var tile = map[yOffset][xOffset];
+            if (tile && tile.id && tile.type === 5) {
+                    tile.hp -= 3 + inventory.length * 3.5;
+                if (tile.hp <= 0) {
+                    map[yOffset][xOffset] = 0;
+                }
+            }
+            
+        }
+    }
+    moveEnemies();
+    drawMap();
+}
+
+function moveCharacter(dx, dy) {
+    var newX = characterX + dx;
+    var newY = characterY + dy;
+
+    function updateCharacterPosition(newX, newY) {
+        map[characterY][characterX] = 0;
+        characterX = newX;
+        characterY = newY;
+        map[characterY][characterX] = character;
+        moveEnemies();
+        drawMap();
+    }
+
+    // Проверяем, можно ли переместить персонажа на новую позицию
+    if (newX >= 0 && newX < 40 && newY >= 0 && newY < 24) {
+        var item = map[newY][newX];
+        if (item === 0) {
+            updateCharacterPosition(newX, newY);
+        } else if (item === 2) { // меч
+            inventory.push('Меч');
+            map[newY][newX] = 0;
+            updateCharacterPosition(newX, newY);
+            updateInventory();
+        } else if (item === 3) { // пузырь
+            character.health = 10;
+            map[newY][newX] = 0;
+            updateCharacterPosition(newX, newY);
+        }
+    }
+}
+
+function moveEnemies() {
+    for (var i = 0; i < map.length; i++) {
+        for (var j = 0; j < map[i].length; j++) {
+            var cell = map[i][j];
+            if (cell && cell.id) {
+                var playerNearby = isPlayerNearby(i, j);
+                if (playerNearby) {
+                    attackPlayer();
+                } else {
+                    var randomDirection = Math.floor(Math.random() * 4); // (0: Up, 1: Down, 2: Left, 3: Right)
+                    var newX = j;
+                    var newY = i;
+                    if (randomDirection === 0 && i > 0 && map[i - 1] && map[i - 1][j] === 0) {
+                        newY = i - 1; 
+                    } else if (randomDirection === 1 && i < 24 && map[i + 1] && map[i + 1][j] === 0) {
+                        newY = i + 1; 
+                    } else if (randomDirection === 2 && j > 0 && map[i][j - 1] === 0) {
+                        newX = j - 1; 
+                    } else if (randomDirection === 3 && j < 39 && map[i][j + 1] === 0) {
+                        newX = j + 1; 
+                    }
+                    if (newX >= 0 && newX < 40 && newY >= 0 && newY < 24) {
+                        map[i][j] = 0;
+                        map[newY][newX] = cell;
+                    }
+                }
+            }
+        }
+    }
+}
+
+function isPlayerNearby(enemyY, enemyX) {
+    if (Math.abs(characterX - enemyX) + Math.abs(characterY - enemyY) === 1) {
+        return true;
+    }
+    return false;
+}
+
+function attackPlayer() {
+    character.health -= 1   ; 
+    if (character.health <= 0) {
+        alert("Вы проиграли игра перезагрузится");
+        reload(); 
+    }
+    drawMap(); 
+}
+
+function reload() {
+    location.reload();
+}
+
+function updateInventory() {
+    var inventoryContainer = document.querySelector('.inventory');
+    inventoryContainer.innerHTML = ''; 
+    for (var i = 0; i < inventory.length; i++) {
+        var imageElement = document.createElement('img');
+        imageElement.src = 'images/tile-SW.png';
+        imageElement.style.height = '32px';
+        inventoryContainer.appendChild(imageElement);
+    }
 }
 
 document.addEventListener('keydown', function (event) {
-    // Обработка нажатия клавиш
     switch (event.key) {
         case 'w':
         case 'W':
@@ -133,103 +272,3 @@ document.addEventListener('keydown', function (event) {
     }
 });
 
-    function characterAttack() {
-        // Найдем врага рядом с персонажем
-        var enemy = map[characterY][characterX + 1];
-        if (enemy && enemy.type === 5) { //
-            enemy.hp -= 5; 
-            if (enemy.hp <= 0) {
-                map[characterY][characterX + 1] = 0;
-            }
-            drawMap();
-        }
-    }
-    
-function moveCharacter(dx, dy) {
-    var newX = characterX + dx;
-    var newY = characterY + dy;
-    // Проверяем, можно ли переместить персонаж на новую позицию
-    if (newX >= 0 && newX < 40 && newY >= 0 && newY < 24) {
-        var item = map[newY][newX];
-        if (item === 0) {
-            // Персонаж двигается на свободное поле
-            map[characterY][characterX] = 0;
-            characterX = newX;
-            characterY = newY;
-            map[characterY][characterX] = 4; // Персонаж
-        } else if (item === 2) {
-            // Персонаж нашел меч
-            inventory.push('Меч'); // Добавляем меч в инвентарь
-            map[newY][newX] = 0; // Удаляем меч с карты
-            map[characterY][characterX] = 0; // Убираем персонажа с текущей позиции
-            characterX = newX;
-            characterY = newY;
-            map[characterY][characterX] = 4; // Персонаж
-            updateInventory();
-
-        } else if (item === 3) {
-            // Персонаж нашел зелье здоровья
-            map[newY][newX] = 0; // Удаляем зелье здоровья с карты
-            map[characterY][characterX] = 0; // Убираем персонажа с текущей позиции
-            characterX = newX;
-            characterY = newY;
-            map[characterY][characterX] = 4; // Персонаж
-        }
-        // Обновляем отображение карты
-        console.log(inventory);
-        drawMap();
-    }
-}
-
-
-
-function updateInventory() {
-    var inventoryContainer = document.querySelector('.inventory');
-    inventoryContainer.innerHTML = ''; // Очищаем содержимое инвентаря
-    for (var i = 0; i < inventory.length; i++) {
-        var imageElement = document.createElement('img');
-        imageElement.src = 'images/tile-SW.png';
-        imageElement.style.height = '32px';
-        inventoryContainer.appendChild(imageElement);
-    }
-}
-
-function placeEnemies() {
-    for (var i = 0; i < 10; i++) { // Создаем 10 противников
-        var x, y;
-        do {
-            // Генерируем случайные координаты
-            x = Math.floor(Math.random() * 40);
-            y = Math.floor(Math.random() * 24);
-        } while (map[y][x] !== 0); // Проверяем, что это пустое место
-        // var enemy = { type: 5, hp: 20 }; // Например, враг с HP 20
-        map[y][x] = enemy;
-    }
-}
-
-function moveEnemies() {
-    for (var i = 0; i < map.length; i++) {
-        for (var j = 0; j < map[i].length; j++) {
-            if (map[i][j] === enemy) {
-                var randomDirection = Math.floor(Math.random() * 4);// (0: Up, 1: Down, 2: Left, 3: Right)
-                var newX = j;
-                var newY = i;
-                if (randomDirection === 0 && i > 0 && map[i - 1][j] === 0) {
-                    newY = i - 1; // Up
-                } else if (randomDirection === 1 && i < 24 && map[i + 1][j] === 0) {
-                    newY = i + 1; // Down
-                } else if (randomDirection === 2 && j > 0 && map[i][j - 1] === 0) {
-                    newX = j - 1; // Left
-                } else if (randomDirection === 3 && j < 39 && map[i][j + 1] === 0) {
-                    newX = j + 1; // Right
-                }
-                // Check if the new position is different from the current position
-                if (newX !== j || newY !== i) {
-                    // Update the enemy's position
-                    map[i][j] = 0;
-                    map[newY][newX] = enemy;
-                }
-            }
-        }
-    }
-}

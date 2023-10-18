@@ -111,6 +111,18 @@
             clear: both;
             display: block;
         }
+
+        .btn {
+            background-color: #ffffff;
+            transition: all 0.2s ease;
+            height: 32px;
+            margin-left: 10px;
+        }
+
+        .btn:hover {
+            background: #000;
+            color: #fff;
+        }
     </style>
 </head>
 
@@ -125,20 +137,25 @@
         <div class="inventory">
         </div>
     </div>
-
+    <button onclick="reload()" class="btn">Suicide</button>
     <script>
-        var map = [];
-        var swords = 2; // Количество мечей
-        var healthPotions = 10; // Количество зелий здоровья
+        // двумерный массив где 0 - пол, 1 - стена, 2 - меч, 3- зелье, character - персонаж, enemy - враг
+        var map = []; 
         var inventory = [];
-        var enemy = {
-            type: 5,
-            hp: 10 // Начальное количество здоровья (можете выбрать другое значение)
+
+        var character = {
+            health: 10,
+            attack: 4
         };
-        var enemies = [];
+
+        var swords = 2; // Кол-во мечей
+        var healthPotions = 10; // Количество зелий здоровья
+
         function Game() {
             this.init = function () {
                 fillWall();
+                genRooms();
+                genPassages();
                 placeItems();
                 spawnCharacter();
                 placeEnemies();
