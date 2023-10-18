@@ -1,4 +1,5 @@
 function drawMap() {
+    moveEnemies();
     var field = document.querySelector('.field');
     field.innerHTML = ''; // Очистка поля
     for (var i = 0; i < map.length; i++) {
@@ -15,7 +16,14 @@ function drawMap() {
                 tile.classList.add('tileP');
                 var healthElement = document.createElement('div');
                 healthElement.classList.add('health');
-                var healthWidth = 100; // calculate health
+                var healthWidth = 100;
+                healthElement.style.width = healthWidth + '%';
+                tile.appendChild(healthElement);
+            } else if (map[i][j] === enemy) { 
+                tile.classList.add('tileE');
+                var healthElement = document.createElement('div');
+                healthElement.classList.add('health');
+                var healthWidth = (enemy.hp / 10) * 100; // Подразумевая, что максимальное HP - 10
                 healthElement.style.width = healthWidth + '%';
                 tile.appendChild(healthElement);
             } else {
@@ -120,9 +128,23 @@ document.addEventListener('keydown', function (event) {
         case 'D':
             moveCharacter(1, 0); // Двигаться вправо
             break;
+        case ' ':
+            characterAttack();
     }
 });
 
+    function characterAttack() {
+        // Найдем врага рядом с персонажем
+        var enemy = map[characterY][characterX + 1];
+        if (enemy && enemy.type === 5) { //
+            enemy.hp -= 5; 
+            if (enemy.hp <= 0) {
+                map[characterY][characterX + 1] = 0;
+            }
+            drawMap();
+        }
+    }
+    
 function moveCharacter(dx, dy) {
     var newX = characterX + dx;
     var newY = characterY + dy;
@@ -143,7 +165,7 @@ function moveCharacter(dx, dy) {
             characterX = newX;
             characterY = newY;
             map[characterY][characterX] = 4; // Персонаж
-            // updateInventory();
+            updateInventory();
 
         } else if (item === 3) {
             // Персонаж нашел зелье здоровья
@@ -154,17 +176,60 @@ function moveCharacter(dx, dy) {
             map[characterY][characterX] = 4; // Персонаж
         }
         // Обновляем отображение карты
+        console.log(inventory);
         drawMap();
     }
 }
 
+
+
 function updateInventory() {
-    var inventoryElement = document.getElementById('inventory');
-    inventoryElement.innerHTML = ''; // Очистка инвентаря
-    // Перебираем предметы в инвентаре и добавляем их в отображение
+    var inventoryContainer = document.querySelector('.inventory');
+    inventoryContainer.innerHTML = ''; // Очищаем содержимое инвентаря
     for (var i = 0; i < inventory.length; i++) {
-        var itemElement = document.createElement('div');
-        itemElement.textContent = inventory[i];
-        inventoryElement.appendChild(itemElement);
+        var imageElement = document.createElement('img');
+        imageElement.src = 'images/tile-SW.png';
+        imageElement.style.height = '32px';
+        inventoryContainer.appendChild(imageElement);
+    }
+}
+
+function placeEnemies() {
+    for (var i = 0; i < 10; i++) { // Создаем 10 противников
+        var x, y;
+        do {
+            // Генерируем случайные координаты
+            x = Math.floor(Math.random() * 40);
+            y = Math.floor(Math.random() * 24);
+        } while (map[y][x] !== 0); // Проверяем, что это пустое место
+        // var enemy = { type: 5, hp: 20 }; // Например, враг с HP 20
+        map[y][x] = enemy;
+    }
+}
+
+function moveEnemies() {
+    for (var i = 0; i < map.length; i++) {
+        for (var j = 0; j < map[i].length; j++) {
+            if (map[i][j] === enemy) {
+                var randomDirection = Math.floor(Math.random() * 4);// (0: Up, 1: Down, 2: Left, 3: Right)
+                var newX = j;
+                var newY = i;
+                if (randomDirection === 0 && i > 0 && map[i - 1][j] === 0) {
+                    newY = i - 1; // Up
+                } else if (randomDirection === 1 && i < 24 && map[i + 1][j] === 0) {
+                    newY = i + 1; // Down
+                } else if (randomDirection === 2 && j > 0 && map[i][j - 1] === 0) {
+                    newX = j - 1; // Left
+                } else if (randomDirection === 3 && j < 39 && map[i][j + 1] === 0) {
+                    newX = j + 1; // Right
+                }
+                // Check if the new position is different from the current position
+                if (newX !== j || newY !== i) {
+                    // Update the enemy's position
+                    map[i][j] = 0;
+                    map[newY][newX] = enemy;
+                }
+            }
+        }
     }
 }

@@ -48,8 +48,7 @@
         .field .tile {
             position: absolute;
             width: 25.6px;
-    height: 26.67px;
-
+            height: 26.67px;
             background-size: 100%;
             background-image: url(images/tile-.png);
             z-index: 5;
@@ -123,21 +122,26 @@
     <div class="cl"></div>
     <h1>Инвентарь</h1>
     <div class="inventory-box">
-        <div class="inventory" id = "inventory">
-            <!-- Здесь будут отображаться предметы из инвентаря -->
+        <div class="inventory">
         </div>
     </div>
-    
+
     <script>
         var map = [];
         var swords = 2; // Количество мечей
         var healthPotions = 10; // Количество зелий здоровья
         var inventory = [];
+        var enemy = {
+            type: 5,
+            hp: 10 // Начальное количество здоровья (можете выбрать другое значение)
+        };
+        var enemies = [];
         function Game() {
             this.init = function () {
                 fillWall();
                 placeItems();
                 spawnCharacter();
+                placeEnemies();
                 drawMap();
             };
         }
@@ -145,4 +149,5 @@
         game.init();
     </script>
 </body>
+
 </html>
